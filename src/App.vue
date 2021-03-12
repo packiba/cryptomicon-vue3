@@ -1,5 +1,11 @@
 <template>
   <div class="container mx-auto flex flex-col items-center bg-gray-100 p-4">
+    <div v-if="spiner" class="fixed w-100 h-100 opacity-80 bg-purple-800 inset-0 z-50 flex items-center justify-center">
+      <svg class="animate-spin -ml-1 mr-3 h-12 w-12 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+    </div> 
   <div class="container">
     <section>
       <div class="flex">
@@ -18,27 +24,22 @@
               placeholder="Например DOGE"
             />
           </div>
-          <!-- <div class="flex bg-white shadow-md p-1 rounded-md shadow-md flex-wrap">
-            <span class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer">
-              BTC
-            </span>
-            <span class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer">
-              DOGE
-            </span>
-            <span class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer">
-              BCH
-            </span>
-            <span class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer">
-              CHD
+          <div class="flex bg-white shadow-md p-1 rounded-md shadow-md flex-wrap">
+            <span 
+              v-for="tip in search()"
+              :key="tip"
+              @click="tipAdd(tip)"
+              class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer">
+              {{ tip ? tip : ' ' }}
             </span>
           </div>
-          <div class="text-sm text-red-600">Такой тикер уже добавлен</div> -->
+          <div v-if="isAdded()" class="text-sm text-red-600">Такой тикер уже добавлен</div>
         </div>
       </div>
 
 
       <button
-        @click="add(ticker)"
+        @click="add"
         type="button"
         class="my-4 inline-flex items-center py-2 px-4 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-full text-white bg-gray-600 hover:bg-gray-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
       >
@@ -158,6 +159,8 @@ export default {
 
   data() {
     return {
+      spiner: true,
+      coinData: [],
       ticker: "",
       tickers: [],
       sel: null,
@@ -165,12 +168,21 @@ export default {
     }
   },
 
-
+  
+  async created() {
+    const data = await fetch('https://min-api.cryptocompare.com/data/all/coinlist?summary=true').
+    then(res => res.json()).
+    then(res => res.Data)
+    const keys = Object.keys(data)
+    keys.forEach(k => this.coinData.push([k, data[k].FullName.split(' ')[0]]))
+    this.spiner = false
+  },
 
 
   methods: {
     add() {
-      const currentTicker = {
+      if (!this.isAdded()) {
+        const currentTicker = {
         name: this.ticker,
         price: '-'
       }
@@ -184,7 +196,18 @@ export default {
         }
       }, 3000)
       this.ticker = ''
+      }
     },
+
+    tipAdd(tip) {
+      this.coinData.forEach(item => {
+        if (item[0] === tip || item[1] === tip) {
+          this.ticker = item[0]
+          }
+      })
+      this.add()
+    },
+
     handleDelete(tickerToRemove) {
       this.tickers = this.tickers.filter(t => t != tickerToRemove)
       if(!this.tickers.length) this.sel = null
@@ -199,6 +222,27 @@ export default {
     select(ticker) {
       this.sel = ticker
       this.graph = []
+    },
+
+    isAdded() {
+      if (this.ticker) {
+        const names = this.tickers.map(item => item.name.toUpperCase())
+        const flag = names.includes(this.ticker.toUpperCase())
+        return flag
+      }
+      return false
+    },
+
+    search() {
+      let matches = []
+      this.coinData.forEach(coin => {
+        if (matches.length < 3) {
+          coin.forEach(str => {
+            if (this.ticker && str.slice(0, this.ticker.length).toLowerCase() === this.ticker.toLowerCase()) matches.push(str)
+          })
+        }
+      })
+      return matches;
     }
   }
 }
