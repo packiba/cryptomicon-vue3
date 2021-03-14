@@ -200,12 +200,25 @@ export default {
       this.ticker = ''
     },
 
+    isValidTicker() {
+      let isValidTicker = false
+      this.coinData.forEach(coin => {
+        if (coin[0].toLowerCase() === this.ticker.toLowerCase() || coin[1].toLowerCase() === this.ticker.toLowerCase()) {
+          console.log('valid', coin, this.ticker)
+          isValidTicker = true
+        }
+      })
+      return isValidTicker
+    },
+
     add() {
-      if (!this.isAdded()) {
+      console.log('log', this.isValidTicker())
+      if (!this.isAdded() && this.isValidTicker()) {
         const currentTicker = {
-        name: this.ticker,
+        name: this.ticker.toUpperCase(),
         price: '-'
       }
+
       this.tickers.push(currentTicker)
       localStorage.setItem('cryptonomicon-list', JSON.stringify(this.tickers))
       this.subsribeToUpdates(currentTicker.name)
@@ -223,6 +236,7 @@ export default {
 
     handleDelete(tickerToRemove) {
       this.tickers = this.tickers.filter(t => t != tickerToRemove)
+      localStorage.setItem('cryptonomicon-list', JSON.stringify(this.tickers))
       if(!this.tickers.length) this.sel = null
     },
 
@@ -257,6 +271,10 @@ export default {
       })
       return matches;
     }
+  },
+
+  watch() {
+
   }
 }
 </script>
