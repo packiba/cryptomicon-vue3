@@ -169,6 +169,9 @@
 
 
 <script>
+
+import { loadTicker } from './api'
+
 export default {
   name: 'App',
 
@@ -209,16 +212,17 @@ export default {
     then(res => res.json()).
     then(res => res.Data)
     const keys = Object.keys(data)
+    console.log('loaded coins: ', keys.length)
     keys.forEach(k => this.coinData.push([k, data[k].FullName.split(' ')[0]]))
     this.spiner = false
 
     const tickersData = localStorage.getItem('cryptonomicon-list')
+    
     if (tickersData) {
       this.tickers = JSON.parse(tickersData)
-      this.tickers.forEach(ticker => {
-        this.subsribeToUpdates(ticker.name)
-      })
     }
+
+    setInterval(this.updateTickers(), 20000)
   },
 
 
@@ -294,16 +298,22 @@ export default {
 
 
   methods: {
-    subsribeToUpdates(tickerName) {
-      setInterval(async() => {
-        const f = await fetch(`https://min-api.cryptocompare.com/data/price?fsym=${tickerName}&tsyms=USD&api_key=1afdf59eaee26da2dff1f9db5289e04658cdbe35039ff08cf058dc4b5ab7ff08`);
-        const data = await f.json();
-        this.tickers.find(t => t.name === tickerName).price = data.USD > 1 ? data.USD.toFixed(2) : data.USD.toPrecision(2);
-        if(this.selectedTicker?.name === tickerName) {
-          this.graph.push(data.USD)
-        }
-      }, 30000)
-      this.ticker = ''
+    formatPrice(price) {
+      return price > 1 ? price.toFixed(2) : price.toPrecision(2)
+    },
+
+    async updateTickers() {
+        const exchangeData = await loadTicker(this.tickers.map(t => t.name))
+        this.tickers.forEach(ticker => {
+          const price = exchangeData[ticker.name]
+
+          if (!price) {
+            ticker.price = '-'
+            return
+          }
+          const normalizedPrice = 1 / price
+          ticker.price = normalizedPrice
+        })
     },
 
     add() {
@@ -315,7 +325,6 @@ export default {
 
       this.tickers = [...this.tickers, currentTicker]
       this.filter = ''
-      this.subsribeToUpdates(currentTicker.name)
       }
     },
 
