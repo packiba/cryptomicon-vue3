@@ -200,19 +200,10 @@ export default {
       }
     })
 
-      // if (windowData.filter) {
-      //   this.filter = windowData.filter
-      // }
-
-      // if (windowData.page) {
-      //   this.page = windowData.page
-      // }
-
     const data = await fetch('https://min-api.cryptocompare.com/data/all/coinlist?summary=true').
     then(res => res.json()).
     then(res => res.Data)
     const keys = Object.keys(data)
-    console.log('loaded coins: ', keys.length)
     keys.forEach(k => this.coinData.push([k, data[k].FullName.split(' ')[0]]))
     this.spiner = false
 
@@ -315,17 +306,6 @@ export default {
       return price > 1 ? price.toFixed(2) : price.toPrecision(2)
     },
 
-    async updateTickers() {
-      // if (!this.tickers.length) {
-      //   return
-      // }
-
-      // this.tickers.forEach(ticker => {
-      //   const price = exchangeData[ticker.name]
-      //   ticker.price = price ?? '-'
-      // })
-    },
-
     add() {
       if (!this.isAdded && this.isValidTicker) {
         const currentTicker = {
@@ -334,9 +314,10 @@ export default {
         }
 
         this.tickers = [...this.tickers, currentTicker]
+        this.ticker = ''
         this.filter = ''
-        subscribeToTicker(this.ticker.name, newPrice => 
-          this.updateTicker(this.ticker.name, newPrice))
+        subscribeToTicker(currentTicker.name, newPrice => 
+          this.updateTicker(currentTicker.name, newPrice))
       }
     },
 

@@ -9,10 +9,7 @@ const loadTickers = () => {
     return
   }
 
-  fetch(`https://min-api.cryptocompare.com/data/pricemulti
-  ?fsym=${[...tickersHandlers.keys()].join(',')}
-  &tsyms=USD
-  &api_key=${API_KEY}`)
+  fetch(`https://min-api.cryptocompare.com/data/pricemulti?fsyms=${[...tickersHandlers.keys()].join(',')}&tsyms=USD&api_key=${API_KEY}`)
 .then(r => r.json())
 .then(rawData => {
   const updatedPrices = Object.fromEntries(
@@ -30,16 +27,12 @@ const loadTickers = () => {
 export const subscribeToTicker = (ticker, cb) => {
   const subscribers = tickersHandlers.get(ticker) || []
   tickersHandlers.set(ticker, [...subscribers, cb])
-
-}
-export const unsubscribeToTicker = (ticker, cb) => {
-  const subscribers = tickersHandlers.get(ticker) || []
-  tickersHandlers.set(
-    ticker,
-    subscribers.filter(fn => fn != cb)
-  )
 }
 
-setInterval(loadTickers, 5000)
+export const unsubscribeToTicker = ticker => {
+  tickersHandlers.delete(ticker)
+}
+
+setInterval(loadTickers, 3000)
 
 window.tickers = tickersHandlers
