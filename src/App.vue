@@ -297,6 +297,9 @@ export default {
       this.tickers
         .filter(t => t.name === tickerName)
         .forEach(t => {
+          if (t === this.selectedTicker) {
+            this.graph.push(price)
+          }
           t.price = price
         })
     },
@@ -320,7 +323,7 @@ export default {
           this.updateTicker(currentTicker.name, newPrice))
       }
     },
-
+    
     tipAdd(tip) {
       this.coinData.forEach(item => {
         if (item[0] === tip || item[1] === tip) {
